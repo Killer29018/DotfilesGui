@@ -91,9 +91,7 @@ modkey = "Mod4"
     menubar.utils.terminal = terminal -- Set the terminal for applications that require it
 -- }}}
 
-awful.screen.connect_for_each_screen(function(s)
-    beautiful.at_screen_connect(s)
-end)
+awful.screen.connect_for_each_screen(beautiful.at_screen_connect)
 
 
 -- {{{ Mouse bindings
@@ -240,6 +238,18 @@ end)
     -- end)
     client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
     client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
+
+    screen.connect_signal(
+        "tag::history:update",
+        function()
+            local s = awful.screen.focused()
+            local c = awful.client.focus.history.get(s, 0)
+            if c == nil then
+                return
+            end
+            awful.client.focus.byidx(0, c)
+        end
+    )
 -- }}}
 
 -- Clean memory

@@ -85,12 +85,13 @@ theme.colour7 = "#ff9472"
 
 theme.taglist_fg_focus = "#0f0f0f"
 theme.taglist_bg_focus = "#CCCCCC"
-
 theme.taglist_fg_occupied = "#FFFFFF"
 theme.taglist_bg_occupied = "#888888"
 
-theme.taglist_fg_empty = "#00000000"
-theme.taglist_bg_empty = "#00000000"
+theme.tasklist_fg_normal = "#FFFFFF"
+theme.tasklist_bg_normal = "#888888"
+theme.tasklist_fg_focus = "#0f0f0f"
+theme.tasklist_bg_focus = "#CCCCCC"
 
 -- taglist_[bg|fg]_[focus|urgent|occupied|empty|volatile]
 -- tasklist_[bg|fg]_[focus|urgent]
@@ -151,10 +152,10 @@ function theme.on_titlebar(c)
                 awful.titlebar.widget.iconwidget(c),
                 layout = wibox.layout.fixed.vertical(),
             },
+            buttons = buttons,
             widget = wibox.container.margin,
             bottom = 5
         },
-        buttons = buttons,
         layout = wibox.layout.align.vertical()
     }
 end
@@ -168,32 +169,27 @@ function theme.at_screen_connect(s)
         gears.shape.rounded_rect(cr, width, height, 10)
     end
 
-    local keyboard_layout = awful.widget.keyboardlayout()
 
-    local taglist_buttons = gears.table.join(
-        awful.button({ }, 1, function(t) t:view_only() end),
+-- {{{ LEFT WIDGET
+    local layoutbox = awful.widget.layoutbox(s)
+    layoutbox:buttons { gears.table.join(
+        awful.button({ }, 1, function () awful.layout.inc( 1) end),
+        awful.button({ }, 3, function () awful.layout.inc(-1) end),
+        awful.button({ }, 4, function () awful.layout.inc( 1) end),
+        awful.button({ }, 5, function () awful.layout.inc(-1) end))
+    }
 
-        awful.button({ modkey }, 1,
-            function(t)
-                if client.focus then
-                    client.focus:move_to_tag(t)
-                end
-            end
-        ),
+    local tasklist_focus_markup = function(name)
+        local modified_name = ""
+        local length = 20
+        if #name > length then
+            modified_name = name:sub(0, length - 3) .. "..."
+        else
+            modified_name = name
+        end
 
-        awful.button({ }, 3, awful.tag.viewtoggle),
-
-        awful.button({ modkey }, 3,
-            function(t)
-                if client.focus then
-                    client.focus:toggle_tag(t)
-                end
-            end
-        ),
-
-        awful.button({ }, 4, function(t) awful.tag.viewnext(t.screen) end),
-        awful.button({ }, 5, function(t) awful.tag.viewprev(t.screen) end)
-    )
+        return ("<span color=\"" .. beautiful.tasklist_fg_focus .. "\">" .. modified_name .. "</span>")
+    end
 
     local tasklist_buttons = gears.table.join(
         awful.button({ }, 1,
@@ -220,16 +216,99 @@ function theme.at_screen_connect(s)
         end)
     )
 
-    awful.tag({ "1", "2", "3", "4", "5", "6", "7", "8", "9" }, s, awful.layout.layouts[1])
+    s.tasklist = awful.widget.tasklist {
+        screen = s,
+        filter = awful.widget.tasklist.filter.currenttags,
+        buttons = tasklist_buttons,
+        layout = {
+            spacing = beautiful.spacing,
+            spacing_widget = {
+                visible = false
+            },
+            layout = wibox.layout.fixed.horizontal,
+        },
+        style = {
+            shape = rounded_rect_5,
+        },
+        widget_template = {
+            {
+                {
+                    {
+                        {
+                            id = "client_icon",
+                            widget = awful.widget.clienticon
+                        },
+                        {
+                            id = "client_name",
+                            widget = wibox.widget.textbox
+                        },
+                        spacing = beautiful.spacing,
+                        spacing_widget = {
+                            visible = false
+                        },
+                        layout = wibox.layout.fixed.horizontal,
+                    },
+                    left = dpi(3),
+                    right = dpi(5),
+                    widget = wibox.container.margin,
+                },
+                shape = rounded_rect_5,
+                widget = wibox.container.background,
+            },
+            id = "background_role",
+            widget = wibox.container.background,
 
-    local layoutbox = awful.widget.layoutbox(s)
+            create_callback = function(self, c, _, _)
+                self:get_children_by_id("client_icon")[1].client = c
 
-    layoutbox:buttons { gears.table.join(
-        awful.button({ }, 1, function () awful.layout.inc( 1) end),
-        awful.button({ }, 3, function () awful.layout.inc(-1) end),
-        awful.button({ }, 4, function () awful.layout.inc( 1) end),
-        awful.button({ }, 5, function () awful.layout.inc(-1) end))
+                awful.tooltip {
+                    objects = { self },
+                    timer_function = function()
+                        return client.name
+                    end
+                }
+
+                if client.focus == c then
+                    self:get_children_by_id("client_name")[1].markup = tasklist_focus_markup(c.name)
+                else
+                    self:get_children_by_id("client_name")[1].markup = ""
+                end
+            end,
+
+            update_callback = function(self, c, _, clients)
+                if client.focus == c then
+                    self:get_children_by_id("client_name")[1].markup = tasklist_focus_markup(c.name)
+                else
+                    self:get_children_by_id("client_name")[1].markup = ""
+                end
+            end
+        }
     }
+
+    local taglist_buttons = gears.table.join(
+        awful.button({ }, 1, function(t) t:view_only() end),
+
+        awful.button({ modkey }, 1,
+            function(t)
+                if client.focus then
+                    client.focus:move_to_tag(t)
+                end
+            end
+        ),
+
+        awful.button({ }, 3, awful.tag.viewtoggle),
+
+        awful.button({ modkey }, 3,
+            function(t)
+                if client.focus then
+                    client.focus:toggle_tag(t)
+                end
+            end
+        ),
+
+        awful.button({ }, 4, function(t) awful.tag.viewnext(t.screen) end),
+        awful.button({ }, 5, function(t) awful.tag.viewprev(t.screen) end)
+    )
 
     local generate_taglist_tasklist = function(t)
         return awful.widget.tasklist {
@@ -259,11 +338,18 @@ function theme.at_screen_connect(s)
                 layout = wibox.layout.fixed.horizontal,
                 create_callback = function(self, client, _, _)
                     self:get_children_by_id("clienticon")[1].client = client
+                    awful.tooltip {
+                        objects = { self },
+                        timer_function = function()
+                            return client.name
+                        end
+                    }
                 end,
             }
         }
     end
 
+    awful.tag({ "1", "2", "3", "4", "5", "6", "7", "8", "9" }, s, awful.layout.layouts[1])
     s.taglist = awful.widget.taglist {
         screen  = s,
         -- filter = awful.widget.taglist.filter.all,
@@ -277,7 +363,7 @@ function theme.at_screen_connect(s)
             layout = wibox.layout.fixed.horizontal
         },
         style = {
-            shape = rounded_rect_5
+            shape = rounded_rect_5,
         },
         widget_template = {
             {
@@ -309,6 +395,80 @@ function theme.at_screen_connect(s)
         }
     }
 
+    local left_widget = wibox.widget {
+        {
+            {
+                {
+                    {
+                        layoutbox,
+                        top = dpi(3),
+                        bottom = dpi(3),
+                        left = dpi(5),
+                        right = dpi(5),
+                        layout = wibox.container.margin
+                    },
+                    bg = beautiful.colour0,
+                    shape = rounded_rect_5,
+                    layout = wibox.container.background
+                },
+                {
+                    s.taglist,
+                    layout = wibox.layout.stack,
+                },
+
+                spacing = beautiful.spacing,
+                spacing_widget = {
+                    visible = false
+                },
+                layout = wibox.layout.fixed.horizontal,
+            },
+            margins = dpi(3),
+            layout = wibox.container.margin
+        },
+        bg = beautiful.background,
+        shape = rounded_rect_5,
+        layout = wibox.container.background
+    }
+-- }}}
+
+-- {{{ CENTER WIDGET
+    local center_widget = wibox.widget {
+        {
+            {
+                s.tasklist,
+                layout = wibox.layout.fixed.horizontal
+            },
+            margins = dpi(3),
+            widget = wibox.container.margin,
+        },
+        bg = beautiful.background,
+        shape = rounded_rect_5,
+        widget = wibox.container.background
+    }
+
+    display_center_widget = function(c)
+        if #s.selected_tag:clients() < 1 then
+            center_widget.visible = false
+        else
+            center_widget.visible = true
+        end
+    end
+
+    client.connect_signal("manage", display_center_widget)
+    client.connect_signal("unmanage", display_center_widget)
+    client.connect_signal("tag::switched", display_center_widget)
+    awesome.connect_signal("refresh", display_center_widget)
+-- }}}
+
+-- {{{ RIGHT WIDGET
+    local keyboard_layout = awful.widget.keyboardlayout()
+
+    local right_widget = wibox.widget {
+        keyboard_layout,
+        layout = wibox.layout.fixed.horizontal
+    }
+-- }}}
+
     s.wibox = awful.wibar {
         position = "top",
         screen = s,
@@ -319,47 +479,10 @@ function theme.at_screen_connect(s)
 
     s.wibox:setup {
         {
-            {
-                {
-                    {
-                        {
-                            {
-                                layoutbox,
-                                top = dpi(3),
-                                bottom = dpi(3),
-                                left = dpi(5),
-                                right = dpi(5),
-                                layout = wibox.container.margin
-                            },
-                            bg = beautiful.colour0,
-                            shape = rounded_rect_5,
-                            layout = wibox.container.background
-                        },
-                        {
-                            s.taglist,
-                            layout = wibox.layout.stack,
-                        },
-
-                        spacing = beautiful.spacing,
-                        spacing_widget = {
-                            visible = false
-                        },
-                        layout = wibox.layout.fixed.horizontal,
-                    },
-                    margins = dpi(3),
-                    layout = wibox.container.margin
-                },
-                bg = beautiful.background,
-                shape = rounded_rect_5,
-                layout = wibox.container.background
-            },
-            { -- Center Widgets
-                layout = wibox.layout.fixed.horizontal
-            },
-            { -- Right Widgets
-                keyboard_layout,
-                layout = wibox.layout.fixed.horizontal
-            },
+            left_widget,
+            center_widget,
+            right_widget,
+            expand = "none",
             layout = wibox.layout.align.horizontal
         },
         layout = wibox.container.margin,
