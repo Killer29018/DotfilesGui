@@ -47,7 +47,7 @@ globalkeys = gears.table.join(
         {description = "lua execute prompt", group = "awesome"}),
 -- }}}
 
--- {{{
+-- {{{ Control
    awful.key(
        { "Mod1" }, "[",
         function()
@@ -131,6 +131,11 @@ globalkeys = gears.table.join(
         end,
         {description = "restore minimized", group = "client"}),
 
+    awful.key(
+        { modkey }, "u",
+        awful.client.urgent.jumpto,
+        {description = "jump to urgent client", group = "client"}),
+
     -- Layout manipulation
     awful.key(
         { modkey, "Shift" }, "j",
@@ -151,11 +156,6 @@ globalkeys = gears.table.join(
         { modkey, "Control" }, "k",
         function () awful.screen.focus_relative(-1) end,
         {description = "focus the previous screen", group = "screen"}),
-
-    awful.key(
-        { modkey }, "u",
-        awful.client.urgent.jumpto,
-        {description = "jump to urgent client", group = "client"}),
 
     awful.key(
         { modkey }, "Tab",
@@ -190,9 +190,7 @@ globalkeys = gears.table.join(
 
     awful.key(
         { modkey }, "p",
-        function()
-            menubar.show()
-        end,
+        function() menubar.show() end,
         {description = "show the menubar", group = "launcher"}),
 -- }}}
 
@@ -226,6 +224,11 @@ globalkeys = gears.table.join(
         { modkey, "Control" }, "l",
         function () awful.tag.incncol(-1, nil, true) end,
         {description = "decrease the number of columns", group = "layout"}),
+
+    awful.key(
+        { modkey, "Control" }, "space",
+        function() awful.layout.inc(1) end,
+        { description = "Select next", group = "layout" }),
 -- }}}
 
 

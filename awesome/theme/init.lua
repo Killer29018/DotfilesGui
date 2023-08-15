@@ -6,6 +6,7 @@ local dpi = require("beautiful.xresources").apply_dpi
 
 local gfs = require("gears.filesystem")
 local themes_path = gfs.get_themes_dir()
+local custom_theme = "~/.config/awesome/icons/"
 
 local beautiful = require("beautiful")
 
@@ -73,25 +74,25 @@ theme.titlebar_maximized_button_focus_inactive = themes_path.."default/titlebar/
 -- }}}
 
 theme.foreground = "#a6accd"
-theme.background = "#0d0f16"
-theme.colour0 = "#75d6fd"
-theme.colour1 = "#b76cfd"
-theme.colour2 = "#ff2281"
-theme.colour3 = "#011ffd"
-theme.colour4 = "#3b27ba"
-theme.colour5 = "#e847ae"
-theme.colour6 = "#13ca91"
-theme.colour7 = "#ff9472"
+theme.background = "#151619"
 
-theme.taglist_fg_focus = "#0f0f0f"
-theme.taglist_bg_focus = "#CCCCCC"
-theme.taglist_fg_occupied = "#FFFFFF"
-theme.taglist_bg_occupied = "#888888"
+theme.fg_normal = "#FFFFFF"
+theme.bg_normal = "#888888"
+theme.fg_focus  = "#0F0F0F"
+theme.bg_focus  = "#CCCCCC"
 
-theme.tasklist_fg_normal = "#FFFFFF"
-theme.tasklist_bg_normal = "#888888"
-theme.tasklist_fg_focus = "#0f0f0f"
-theme.tasklist_bg_focus = "#CCCCCC"
+theme.fg_focus_light = "#0F0F0F"
+theme.bg_focus_light = "#AFAFAF"
+
+theme.taglist_fg_occupied = theme.fg_normal
+theme.taglist_bg_occupied = theme.bg_normal
+theme.taglist_fg_focus    = theme.fg_focus
+theme.taglist_bg_focus    = theme.bg_focus
+
+theme.tasklist_fg_normal = theme.fg_normal
+theme.tasklist_bg_normal = theme.bg_normal
+theme.tasklist_fg_focus  = theme.fg_focus
+theme.tasklist_bg_focus  = theme.bg_focus
 
 -- taglist_[bg|fg]_[focus|urgent|occupied|empty|volatile]
 -- tasklist_[bg|fg]_[focus|urgent]
@@ -104,392 +105,40 @@ theme.tasklist_bg_focus = "#CCCCCC"
 -- menu_[bg|fg]_[normal|focus]
 -- menu_[border_color|border_width]
 
+theme.layout_fairh  = themes_path.."default/layouts/fairhw.png"
+theme.layout_fairv  = themes_path.."default/layouts/fairvw.png"
 theme.layout_floating  = themes_path.."default/layouts/floatingw.png"
-theme.layout_max       = themes_path.."default/layouts/maxw.png"
-theme.layout_tile      = themes_path.."default/layouts/tilew.png"
-theme.layout_dwindle   = themes_path.."default/layouts/dwindlew.png"
+theme.layout_magnifier  = themes_path.."default/layouts/magnifierw.png"
+theme.layout_max  = themes_path.."default/layouts/maxw.png"
+theme.layout_fullscreen  = themes_path.."default/layouts/fullscreenw.png"
+theme.layout_tilebottom  = themes_path.."default/layouts/tilebottomw.png"
+theme.layout_tileleft  = themes_path.."default/layouts/tileleftw.png"
+theme.layout_tile  = themes_path.."default/layouts/tilew.png"
+theme.layout_tiletop  = themes_path.."default/layouts/tiletopw.png"
+theme.layout_spiral  = themes_path.."default/layouts/spiral.png"
+theme.layout_dwindle  = themes_path.."default/layouts/dwindlew.png"
+theme.layout_cornernw  = themes_path.."default/layouts/cornernww.png"
+theme.layout_cornerne  = themes_path.."default/layouts/cornernew.png"
+theme.layout_cornersw  = themes_path.."default/layouts/cornersww.png"
+theme.layout_cornerse  = themes_path.."default/layouts/cornersew.png"
+
+theme.menu_hamburger_normal = custom_theme.."menu/hamburger_menu_normal.png"
+theme.menu_hamburger_focus  = custom_theme.."menu/hamburger_menu_focus.png"
 
 theme.icon_theme = nil
 theme.spacing = dpi(6)
+theme.margin = dpi(3)
 
 theme.titlebar_location = "left"
-
-local spr = wibox.widget.textbox(' ')
 
 beautiful.init(theme)
 
 function theme.on_titlebar(c)
-    -- buttons for the titlebar
-    local buttons = gears.table.join(
-        awful.button(
-            { }, 1,
-            function()
-                c:emit_signal("request::activate", "titlebar", {raise = true})
-                awful.mouse.client.move(c)
-            end),
-
-        awful.button(
-            { }, 3,
-            function()
-                c:emit_signal("request::activate", "titlebar", {raise = true})
-                awful.mouse.client.resize(c)
-            end)
-    )
-
-    awful.titlebar(c, { position =  beautiful.titlebar_location, size = 22 }) : setup {
-        { -- Top
-            awful.titlebar.widget.closebutton(c),
-            awful.titlebar.widget.maximizedbutton(c),
-            awful.titlebar.widget.minimizebutton(c),
-            layout = wibox.layout.fixed.vertical(),
-        },
-        { -- Middle
-            layout  = wibox.layout.fixed.vertical(),
-            buttons = buttons
-        },
-        { -- Bottom
-            {
-                awful.titlebar.widget.iconwidget(c),
-                layout = wibox.layout.fixed.vertical(),
-            },
-            buttons = buttons,
-            widget = wibox.container.margin,
-            bottom = 5
-        },
-        layout = wibox.layout.align.vertical()
-    }
+    require("theme.titlebar").taskbar(c)
 end
 
 function theme.at_screen_connect(s)
-    local rounded_rect_5 = function(cr, width, height)
-        gears.shape.rounded_rect(cr, width, height, 5)
-    end
-
-    local rounded_rect_10 = function(cr, width, height)
-        gears.shape.rounded_rect(cr, width, height, 10)
-    end
-
-
--- {{{ LEFT WIDGET
-    local layoutbox = awful.widget.layoutbox(s)
-    layoutbox:buttons { gears.table.join(
-        awful.button({ }, 1, function () awful.layout.inc( 1) end),
-        awful.button({ }, 3, function () awful.layout.inc(-1) end),
-        awful.button({ }, 4, function () awful.layout.inc( 1) end),
-        awful.button({ }, 5, function () awful.layout.inc(-1) end))
-    }
-
-    local tasklist_focus_markup = function(name)
-        local modified_name = ""
-        local length = 20
-        if #name > length then
-            modified_name = name:sub(0, length - 3) .. "..."
-        else
-            modified_name = name
-        end
-
-        return ("<span color=\"" .. beautiful.tasklist_fg_focus .. "\">" .. modified_name .. "</span>")
-    end
-
-    local tasklist_buttons = gears.table.join(
-        awful.button({ }, 1,
-            function (c)
-                if c == client.focus then
-                    c.minimized = true
-                else
-                    c:emit_signal(
-                        "request::activate", "tasklist",
-                        {raise = true})
-                end
-            end),
-
-        awful.button({ }, 3, function()
-            awful.menu.client_list({ theme = { width = 250 } })
-        end),
-
-        awful.button({ }, 4, function ()
-            awful.client.focus.byidx(1)
-        end),
-
-        awful.button({ }, 5, function ()
-            awful.client.focus.byidx(-1)
-        end)
-    )
-
-    s.tasklist = awful.widget.tasklist {
-        screen = s,
-        filter = awful.widget.tasklist.filter.currenttags,
-        buttons = tasklist_buttons,
-        layout = {
-            spacing = beautiful.spacing,
-            spacing_widget = {
-                visible = false
-            },
-            layout = wibox.layout.fixed.horizontal,
-        },
-        style = {
-            shape = rounded_rect_5,
-        },
-        widget_template = {
-            {
-                {
-                    {
-                        {
-                            id = "client_icon",
-                            widget = awful.widget.clienticon
-                        },
-                        {
-                            id = "client_name",
-                            widget = wibox.widget.textbox
-                        },
-                        spacing = beautiful.spacing,
-                        spacing_widget = {
-                            visible = false
-                        },
-                        layout = wibox.layout.fixed.horizontal,
-                    },
-                    left = dpi(3),
-                    right = dpi(5),
-                    widget = wibox.container.margin,
-                },
-                shape = rounded_rect_5,
-                widget = wibox.container.background,
-            },
-            id = "background_role",
-            widget = wibox.container.background,
-
-            create_callback = function(self, c, _, _)
-                self:get_children_by_id("client_icon")[1].client = c
-
-                awful.tooltip {
-                    objects = { self },
-                    timer_function = function()
-                        return client.name
-                    end
-                }
-
-                if client.focus == c then
-                    self:get_children_by_id("client_name")[1].markup = tasklist_focus_markup(c.name)
-                else
-                    self:get_children_by_id("client_name")[1].markup = ""
-                end
-            end,
-
-            update_callback = function(self, c, _, clients)
-                if client.focus == c then
-                    self:get_children_by_id("client_name")[1].markup = tasklist_focus_markup(c.name)
-                else
-                    self:get_children_by_id("client_name")[1].markup = ""
-                end
-            end
-        }
-    }
-
-    local taglist_buttons = gears.table.join(
-        awful.button({ }, 1, function(t) t:view_only() end),
-
-        awful.button({ modkey }, 1,
-            function(t)
-                if client.focus then
-                    client.focus:move_to_tag(t)
-                end
-            end
-        ),
-
-        awful.button({ }, 3, awful.tag.viewtoggle),
-
-        awful.button({ modkey }, 3,
-            function(t)
-                if client.focus then
-                    client.focus:toggle_tag(t)
-                end
-            end
-        ),
-
-        awful.button({ }, 4, function(t) awful.tag.viewnext(t.screen) end),
-        awful.button({ }, 5, function(t) awful.tag.viewprev(t.screen) end)
-    )
-
-    local generate_taglist_tasklist = function(t)
-        return awful.widget.tasklist {
-            screen = s,
-            filter = function(c, scr)
-                local ctags = c:tags()
-                for _, v in ipairs(ctags) do
-                    if v == t then
-                        return true
-                    end
-                end
-                return false
-            end,
-            buttons = tasklist_buttons,
-            layout = {
-                spacing = beautiful.spacing,
-                spacing_widget = {
-                    visible = false
-                },
-                layout = wibox.layout.fixed.horizontal,
-            },
-            widget_template = {
-                {
-                    id = "clienticon",
-                    widget = awful.widget.clienticon
-                },
-                layout = wibox.layout.fixed.horizontal,
-                create_callback = function(self, client, _, _)
-                    self:get_children_by_id("clienticon")[1].client = client
-                    awful.tooltip {
-                        objects = { self },
-                        timer_function = function()
-                            return client.name
-                        end
-                    }
-                end,
-            }
-        }
-    end
-
-    awful.tag({ "1", "2", "3", "4", "5", "6", "7", "8", "9" }, s, awful.layout.layouts[1])
-    s.taglist = awful.widget.taglist {
-        screen  = s,
-        -- filter = awful.widget.taglist.filter.all,
-        filter  = function(t) return t.selected or #t:clients() > 0 end,
-        buttons = taglist_buttons,
-        layout = {
-            spacing = beautiful.spacing,
-            spacing_widget = {
-                visible = false,
-            },
-            layout = wibox.layout.fixed.horizontal
-        },
-        style = {
-            shape = rounded_rect_5,
-        },
-        widget_template = {
-            {
-                {
-                    {
-                        id = 'text_role',
-                        widget = wibox.widget.textbox,
-                    },
-                    {
-                        id = 'tasklist_placeholder',
-                        widget = wibox.layout.fixed.horizontal,
-                    },
-                    spacing = beautiful.spacing,
-                    spacing_widget = {
-                        visible = false
-                    },
-                    layout = wibox.layout.fixed.horizontal
-                },
-                left  = dpi(5),
-                right = dpi(5),
-                widget = wibox.container.margin,
-            },
-            id = 'background_role',
-            widget = wibox.container.background,
-
-            create_callback = function(self, tag, index, _)
-                self:get_children_by_id("tasklist_placeholder")[1]:add(generate_taglist_tasklist(tag))
-            end
-        }
-    }
-
-    local left_widget = wibox.widget {
-        {
-            {
-                {
-                    {
-                        layoutbox,
-                        top = dpi(3),
-                        bottom = dpi(3),
-                        left = dpi(5),
-                        right = dpi(5),
-                        layout = wibox.container.margin
-                    },
-                    bg = beautiful.colour0,
-                    shape = rounded_rect_5,
-                    layout = wibox.container.background
-                },
-                {
-                    s.taglist,
-                    layout = wibox.layout.stack,
-                },
-
-                spacing = beautiful.spacing,
-                spacing_widget = {
-                    visible = false
-                },
-                layout = wibox.layout.fixed.horizontal,
-            },
-            margins = dpi(3),
-            layout = wibox.container.margin
-        },
-        bg = beautiful.background,
-        shape = rounded_rect_5,
-        layout = wibox.container.background
-    }
--- }}}
-
--- {{{ CENTER WIDGET
-    local center_widget = wibox.widget {
-        {
-            {
-                s.tasklist,
-                layout = wibox.layout.fixed.horizontal
-            },
-            margins = dpi(3),
-            widget = wibox.container.margin,
-        },
-        bg = beautiful.background,
-        shape = rounded_rect_5,
-        widget = wibox.container.background
-    }
-
-    display_center_widget = function(c)
-        if #s.selected_tag:clients() < 1 then
-            center_widget.visible = false
-        else
-            center_widget.visible = true
-        end
-    end
-
-    client.connect_signal("manage", display_center_widget)
-    client.connect_signal("unmanage", display_center_widget)
-    client.connect_signal("tag::switched", display_center_widget)
-    awesome.connect_signal("refresh", display_center_widget)
--- }}}
-
--- {{{ RIGHT WIDGET
-    local keyboard_layout = awful.widget.keyboardlayout()
-
-    local right_widget = wibox.widget {
-        keyboard_layout,
-        layout = wibox.layout.fixed.horizontal
-    }
--- }}}
-
-    s.wibox = awful.wibar {
-        position = "top",
-        screen = s,
-        height = dpi(34),
-        ontop = true,
-        bg = "#00000000"
-    }
-
-    s.wibox:setup {
-        {
-            left_widget,
-            center_widget,
-            right_widget,
-            expand = "none",
-            layout = wibox.layout.align.horizontal
-        },
-        layout = wibox.container.margin,
-        top   = dpi(4),
-        left  = dpi(5),
-        right = dpi(5)
-    }
+    s.wibox = require("theme.taskbar.init").wibox(s)
 end
 
 -- local clock_widget = awful.widget.watch(
