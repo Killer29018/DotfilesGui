@@ -65,6 +65,9 @@ local date = function(s)
 
         bg = beautiful.bg_normal,
         fg = beautiful.fg_normal,
+        mode = "outside",
+        preferred_position = "bottom",
+        preferred_alignment = "middle",
     }
 
     return widget
@@ -97,8 +100,7 @@ local menu = function(s)
                 buttons = {
                     awful.button({}, 1, nil,
                         function()
-                            require("naughty").notify({text = beautiful.menu_hamburger_normal })
-                            require("theme.menu").show_menu(s)
+                            require("theme.menu").toggle_menu(s)
                         end
                     )
                 },

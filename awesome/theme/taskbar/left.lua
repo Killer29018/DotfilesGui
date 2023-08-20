@@ -153,7 +153,10 @@ local tasklist = function(s, t)
                     objects = { self },
                     timer_function = function()
                         return client.name
-                    end
+                    end,
+                    mode = "outside",
+                    preferred_position = "bottom",
+                    preferred_alignment = "middle",
                 }
             end,
         }

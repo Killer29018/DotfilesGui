@@ -88,7 +88,10 @@ local tasklist = function(s)
                     objects = { self },
                     timer_function = function()
                         return c.name
-                    end
+                    end,
+                    mode = "outside",
+                    preferred_position = "bottom",
+                    preferred_alignment = "middle",
                 }
 
                 self:get_children_by_id("client_name")[1].markup = tasklist_focus_markup(c.name)
