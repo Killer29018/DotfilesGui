@@ -84,6 +84,8 @@ theme.bg_focus  = "#CCCCCC"
 
 theme.fg_focus_light = "#0F0F0F"
 theme.bg_focus_light = "#AFAFAF"
+theme.fg_normal_light = "#FFFFFF"
+theme.bg_normal_light = "#6B6B6B"
 
 theme.taglist_fg_occupied = theme.fg_normal
 theme.taglist_bg_occupied = theme.bg_normal

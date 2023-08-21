@@ -74,7 +74,12 @@ modkey = "Mod4"
     menubar.utils.terminal = terminal -- Set the terminal for applications that require it
 -- }}}
 
-awful.screen.connect_for_each_screen(beautiful.at_screen_connect)
+awful.screen.connect_for_each_screen(
+    function(s)
+        beautiful.at_screen_connect(s)
+        require("theme.menu").create_menu(s)
+    end
+)
 
 -- {{{ Mouse bindings
     root.buttons(gears.table.join(
