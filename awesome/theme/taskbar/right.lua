@@ -132,10 +132,13 @@ local menu = function(s)
     return widget
 end
 
+local battery = require("lain").widget.bat {}
+
 return {
     right_widget = function(s)
         local widget = wibox.widget {
             {
+                battery.widget,
                 keyboard_layout(s),
                 date(s),
                 time(s),
